@@ -14,6 +14,11 @@ from backend.supabase_client import (
     
 )
 from dotenv import load_dotenv
+import httpx
+from supabase import create_client
+
+# Evita el bug de proxy en httpx>=0.27
+httpx._config.DEFAULT_LIMITS = httpx.Limits(max_connections=10, max_keepalive_connections=5)
 
 load_dotenv()
 app = Flask(__name__)
