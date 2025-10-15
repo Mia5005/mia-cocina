@@ -1,8 +1,8 @@
 # app.py
 import os
 import json
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-from functools import wraps 
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
+from functools import wraps
 from backend.supabase_client import (
     get_menu_remote,
     upsert_menu_remote_by_nombre,
@@ -11,20 +11,25 @@ from backend.supabase_client import (
     get_pedidos_remote,
     finalizar_pedido_remoto,
     get_pedidos_remote_all,
-    
 )
 from dotenv import load_dotenv
 import httpx
 from supabase import create_client
 
-# Evita el bug de proxy en httpx>=0.27
-httpx._config.DEFAULT_LIMITS = httpx.Limits(max_connections=10, max_keepalive_connections=5)
+# ✅ Evita bug de proxy en httpx >= 0.27 y Python 3.13
+try:
+    httpx._config.DEFAULT_LIMITS = httpx.Limits(max_connections=10, max_keepalive_connections=5)
+except Exception as e:
+    print("Aviso: no se pudo ajustar límites de httpx:", e)
 
+# ✅ Cargar variables de entorno
 load_dotenv()
-app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback_secret_key") # cámbiala por una variable segura
 
-#----------------- DECORADO -----------------
+# ✅ Configuración base de Flask
+app = Flask(__name__, static_folder="static", static_url_path="/static")
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback_secret_key")
+
+# ----------------- DECORADOR LOGIN -----------------
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -32,6 +37,7 @@ def login_required(f):
             return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated_function
+
 # ------------------ LOGIN ------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -56,18 +62,21 @@ def logout():
     return redirect(url_for("index"))
 
 
+# ------------------ PANEL ------------------
 @app.route("/panel")
 @login_required
 def panel():
     return render_template("panel.html", user=session["user"])
 
-# ------------------ RUTAS ------------------
 
+# ------------------ RUTAS PRINCIPALES ------------------
 @app.route("/")
 def index():
     menu = get_menu_remote()
     print("Menu loaded:", menu)
     return render_template("index.html", menu=menu)
+
+
 @app.route("/pedido", methods=["POST"])
 def crear_pedido():
     try:
@@ -92,6 +101,7 @@ def crear_pedido():
     except Exception as e:
         print("Error al crear pedido:", e)
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/cocina")
 @login_required
@@ -133,11 +143,11 @@ def historial():
     historial = get_pedidos_remote_all()
     return render_template("historial.html", historial=historial)
 
+
 # ---------------- ADMIN ----------------
 @app.route("/admin")
 @login_required
 def admin():
-    # 🔹 Obtener datos remotos
     menu = get_menu_remote()
     pedidos = get_pedidos_remote()
 
@@ -152,9 +162,7 @@ def admin():
         elif not isinstance(p.get("item"), list):
             p["item"] = []
 
-    # 🔹 Obtener historial completo (finalizados)
     historial = get_pedidos_remote_all()
-
     print("Pedidos procesados para admin:", pedidos)
     return render_template("admin.html", menu=menu, pedidos=pedidos, historial=historial)
 
@@ -196,6 +204,15 @@ def admin_subir_imagen(nombre):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+# ✅ Servir imágenes locales (si Render no las muestra automáticamente)
+@app.route("/images/<path:filename>")
+def serve_image(filename):
+    return send_from_directory(os.path.join(app.root_path, "static", "images"), filename)
+
+
+# ---------------- MAIN ----------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
+
 

@@ -1,32 +1,124 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="utf-8"><title>Cocina</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head>
-<body class="container mt-4">
-  <h1 class="mb-4">📋 Pedidos en Cocina</h1>
-  {% for p in pedidos %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5>Mesa {{ p.mesa_id }} — Total ${{ p.total }} — ID: {{ p.id }}</h5>
-        <ul>
-          {% for it in p.item %}
-            <li>{{ it.nombre }} x{{ it.cantidad }}</li>
-          {% endfor %}
-        </ul>
-        <button class="btn btn-success" onclick="finalizar({{ p.id }})">✅ Finalizar</button>
-      </div>
-    </div>
-  {% else %}
-    <p>No hay pedidos activos.</p>
-  {% endfor %}
+<head>
+  <meta charset="utf-8">
+  <title>Vista Cocina - Cocinamia</title>
 
-<script>
-async function finalizar(id){
-  if(!confirm('Finalizar pedido?')) return;
-  const res = await fetch(`/cocina/finalizar/${id}`,{method:'POST'});
-  const data = await res.json();
-  alert(data.message);
-  location.reload();
-}
-</script>
+  <!-- 🔹 Meta responsive -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- 🔹 Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- 🔹 Estilos personalizados -->
+  <style>
+    body {
+      background-color: #fffbea;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 700;
+      margin-bottom: 2rem;
+    }
+
+    .pedido-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: none;
+      background-color: #ffffff;
+      transition: transform 0.2s ease;
+    }
+
+    .pedido-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .pedido-header {
+      background-color: #ffdf7e;
+      border-radius: 12px 12px 0 0;
+      font-weight: bold;
+    }
+
+    .pedido-body ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .pedido-body li {
+      padding: 4px 0;
+      font-size: 0.95rem;
+    }
+
+    .btn-finalizar {
+      background-color: #28a745;
+      border: none;
+      width: 100%;
+      color: white;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-finalizar:hover {
+      background-color: #218838;
+      transform: scale(1.02);
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .pedido-body li {
+        font-size: 0.9rem;
+      }
+
+      .btn-finalizar {
+        font-size: 0.9rem;
+        padding: 0.6rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Pedidos en Cocina</h1>
+
+    <div class="row g-3">
+      {% for p in pedidos %}
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card pedido-card">
+            <div class="card-header pedido-header text-center">
+              Pedido #{{ p.id }} — Mesa {{ p.mesa_id }}
+            </div>
+            <div class="card-body pedido-body">
+              <ul>
+                {% for it in p.item %}
+                  <li>🍽️ {{ it.nombre }} × {{ it.cantidad }}</li>
+                {% endfor %}
+              </ul>
+              <p class="mt-2 mb-1 text-muted small">Total: ${{ p.total }}</p>
+              <button class="btn btn-finalizar mt-2" onclick="finalizarPedido({{ p.id }})">Finalizar Pedido</button>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-center text-muted mt-4">No hay pedidos pendientes.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    async function finalizarPedido(id) {
+      if (!confirm('¿Finalizar este pedido?')) return;
+      const res = await fetch(`/cocina/finalizar/${id}`, { method: 'POST' });
+      const data = await res.json();
+      alert(data.message);
+      location.reload();
+    }
+  </script>
 </body>
 </html>
