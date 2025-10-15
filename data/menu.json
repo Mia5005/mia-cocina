@@ -1,0 +1,20 @@
+[
+  {
+    "id": "chuleta_valluna",
+    "nombre": "Chuleta Valluna",
+    "precio": 30000,
+    "categoria": "carnes",
+    "inventario": 4,
+    "imagen": "/img/chuleta.jpg",
+    "activo": true
+  },
+  {
+    "id": "cazuela_frijoles_frijoles",
+    "nombre": "Cazuela de Frijoles con Chicharrón",
+    "precio": 50000,
+    "categoria": "plato_estrella",
+    "inventario": 9,
+    "imagen": "/img/cazuela.jpg",
+    "activo": true
+  }
+]

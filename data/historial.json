@@ -1,0 +1,30 @@
+[
+  {
+    "mesa_id": "1",
+    "items": [
+      {
+        "id": "chuleta_valluna",
+        "nombre": "Chuleta Valluna",
+        "precio": 30000,
+        "cantidad": 3
+      }
+    ],
+    "total": 90000,
+    "timestamp": "2025-10-07T18:50:52",
+    "finalizado": "2025-10-07T18:51:00"
+  },
+  {
+    "mesa_id": "4",
+    "items": [
+      {
+        "id": "chuleta_valluna",
+        "nombre": "Chuleta Valluna",
+        "precio": 30000,
+        "cantidad": 1
+      }
+    ],
+    "total": 30000,
+    "timestamp": "2025-10-07T18:54:40",
+    "finalizado": "2025-10-07T18:54:53"
+  }
+]

@@ -1,0 +1,79 @@
+ <!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Cocinamia - Menú</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>.plato-img{width:120px;height:90px;object-fit:cover;border-radius:8px;}</style>
+</head>
+<body class="container mt-4">
+  <h1 class="text-center mb-4">🍽️ Menú - Cocinamia</h1>
+
+  <div class="mb-3">
+    <label class="form-label">ID de mesa</label>
+    <input id="mesa_id" class="form-control" placeholder="Ej: Mesa 3">
+  </div>
+<!-- {print(menu)} -->
+  <div class="row">
+    {% for plato in menu %}
+    <div class="col-md-3 mb-3">
+      <div class="card p-2">
+        <img src="{{ plato.imagen }}" class="plato-img card-img-top" alt="{{ plato.nombre }}">
+        <div class="card-body text-center">
+          <h5>{{ plato.nombre }}</h5>
+          <p class="text-success fw-bold">${{ plato.precio }}</p>
+          <p class="small text-muted">Disponibles: {{ plato.inventario }}</p>
+          {% if plato.inventario > 0 %}
+          <div class="d-flex justify-content-center">
+            <input id="cant_{{ plato.id }}" type="number" min="1" max="{{ plato.inventario }}" value="1" class="form-control form-control-sm me-2" style="width:70px">
+            <button class="btn btn-primary btn-sm" onclick="agregar({{ plato.id }}, '{{ plato.nombre }}', {{ plato.precio }})">Agregar</button>
+          </div>
+          {% else %}
+          <button class="btn btn-secondary btn-sm" disabled>Agotado</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <hr>
+  <h4>Pedido Actual</h4>
+  <ul id="lista" class="list-group mb-3"></ul>
+  <h5>Total: $<span id="total">0.00</span></h5>
+  <button class="btn btn-success w-100" onclick="enviarPedido()">Enviar Pedido</button>
+<div class="text-center mt-4">
+  <a href="{{ url_for('login') }}" class="btn btn-outline-dark">Entrar al panel</a>
+</div>
+<script>
+let pedido = [];
+function agregar(id,nombre,precio){
+  const cantidad = parseInt(document.getElementById('cant_'+id).value)||1;
+  const e = pedido.find(x=>x.id===id);
+  if(e) e.cantidad += cantidad; else pedido.push({id,nombre,precio,cantidad});
+  render();
+}
+function render(){
+  const lista = document.getElementById('lista'); lista.innerHTML='';
+  let total=0;
+  pedido.forEach(p=>{
+    total += p.precio * p.cantidad;
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between';
+    li.innerHTML = `${p.nombre} x${p.cantidad} <span>$${(p.precio*p.cantidad).toFixed(2)}</span>`;
+    lista.appendChild(li);
+  });
+  document.getElementById('total').innerText = total.toFixed(2);
+}
+async function enviarPedido(){
+  const mesa = document.getElementById('mesa_id').value.trim();
+  if(!mesa) return alert('Ingresa el ID de mesa');
+  if(pedido.length===0) return alert('No hay platos');
+  const res = await fetch('/pedido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mesa_id:mesa,items:pedido})});
+  const data = await res.json();
+  if(data.status==='ok'){ alert('Pedido guardado'); pedido=[]; render(); document.getElementById('mesa_id').value=''; location.reload(); }
+  else alert('Error: '+data.message);
+}
+</script>
+</body>
+</html>
